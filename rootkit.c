@@ -12,7 +12,6 @@
 #include <asm/smp.h>
 
 static unsigned long** sys_64_tbl;
-// unsigned long original_read;
 unsigned long original_open;
 
 static inline unsigned long __readcr0 (void)
@@ -40,15 +39,6 @@ static unsigned long get_syscall_table(unsigned long*** tbl_out)
 
     return (unsigned long)*tbl_out;
 }
-
-// static long our_read(unsigned f_d, char* buf, size_t count)
-// {
-//     unsigned long(*orig)(unsigned, char*, size_t) = (unsigned long(*)(unsigned, char*, size_t))original_read;
-    
-    
-    
-//     return orig(f_d, buf, count);
-// }
 
 static char * get_basename(const char *filename)
 {
@@ -88,8 +78,6 @@ static int __init hijack_init(void)
 		return -1;
 	{
 		__writecr0(__readcr0() & ~X86_CR0_WP);
-		// original_read = (unsigned long) sys_64_tbl[__NR_read];
-		// sys_64_tbl[__NR_read] = (unsigned long*)our_read;
         original_open = (unsigned long) sys_64_tbl[__NR_open];
         sys_64_tbl[__NR_open] = (unsigned long*)our_open;
 		__writecr0(__readcr0() | X86_CR0_WP);
@@ -101,14 +89,13 @@ static int __init hijack_init(void)
 static void __exit hijack_cleanup(void)
 {
 	__writecr0(__readcr0() & ~X86_CR0_WP);
-	// sys_64_tbl[__NR_read] = (unsigned long*)original_read;
     sys_64_tbl[__NR_open] = (unsigned long*)original_open;
 	__writecr0(__readcr0() | X86_CR0_WP);
 }
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("scipio@scipio.org");
-MODULE_DESCRIPTION("hijack system call");
+MODULE_DESCRIPTION("hijack open system call");
 
 module_init(hijack_init);
 module_exit(hijack_cleanup);
